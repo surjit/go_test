@@ -26,7 +26,7 @@ window.addEventListener("load", function(evt) {
         if (ws) {
             return false;
         }
-        ws = new WebSocket("ws://192.168.11.193:3000/ws");
+        ws = new WebSocket("ws://127.0.0.1:3000/ws");
         ws.onopen = function(evt) {
             print("OPEN");
         }
