@@ -25,7 +25,9 @@ var redisClient = redis.NewClient(&redis.Options{
 func TestSocket() fiber.Handler {
 	socket := websocket.New(func(c *websocket.Conn) {
 
-		go deliverMessages(c)
+		status := 1
+
+		go deliverMessages(c, &status)
 
 		var (
 			msg []byte
@@ -33,7 +35,10 @@ func TestSocket() fiber.Handler {
 		)
 		for {
 			if _, msg, err = c.ReadMessage(); err != nil {
+				//log.Println(c.RemoteAddr().String())
+
 				log.Println("read:", err)
+				status = 0
 				break
 			}
 
@@ -47,7 +52,7 @@ func TestSocket() fiber.Handler {
 	return socket
 }
 
-func deliverMessages(c *websocket.Conn) {
+func deliverMessages(c *websocket.Conn, status *int) {
 	subscriber := redisClient.Subscribe(ctx, "chat")
 	user := User{}
 
@@ -64,6 +69,11 @@ func deliverMessages(c *websocket.Conn) {
 		}
 
 		text := []byte(fmt.Sprintf("{\"name\":\"%s\", \"email\":\"%s\"}", user.Name, user.Email))
+
+		if *status == 0 {
+			break
+		}
+
 		if err = c.WriteMessage(websocket.TextMessage, text); err != nil {
 			log.Println("write:", err)
 			break
